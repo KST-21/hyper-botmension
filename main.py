@@ -4,12 +4,17 @@ from typing import Final
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from constants import *
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
+
 
 load_dotenv()
 
 # Access variables
 TOKEN: Final = os.getenv("TOKEN")
 BOT_ADMISSION_CHANNEL_ID: Final = os.getenv("BOT_ADMISSION_CHANNEL_ID")
+PORT = int(os.environ.get("PORT", 10000))
+
 
 data: dict[str,bool] = {
   "allow_photo_message": False
@@ -68,9 +73,22 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   await update.message.reply_text(receipt_receive)
   data["allow_photo_message"] = False
+  
+class Handler(BaseHTTPRequestHandler):
+  def do_GET(self):
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write(b"Bot is running!")
+    
+  def do_HEAD(self):
+    self.send_response(200)
+    self.end_headers()
+
 
 if __name__ == "__main__":
   print("Starting bot...")
+  server = HTTPServer(("", PORT), Handler)
+  threading.Thread(target=server.serve_forever, daemon=True).start()
   app = Application.builder().token(TOKEN).build()
   app.add_handler(CommandHandler("start", start))
   app.add_handler(CallbackQueryHandler(button))
