@@ -13,6 +13,7 @@ load_dotenv()
 # Access variables
 TOKEN: Final = os.getenv("TOKEN")
 BOT_ADMISSION_CHANNEL_ID: Final = os.getenv("BOT_ADMISSION_CHANNEL_ID")
+BOT_RECEPTION_CHANNEL_ID: Final = os.getenv("BOT_RECEPTION_CHANNEL_ID")
 PORT = int(os.environ.get("PORT", 10000))
 
 
@@ -55,6 +56,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
   await update.message.reply_text(sending_message_warning_1)
   await update.message.reply_text(sending_message_warning_2)
+  
+  await context.bot.forward_message(
+    chat_id=BOT_RECEPTION_CHANNEL_ID,
+    from_chat_id=update.message.chat_id,
+    message_id=update.message.message_id
+  )
 
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
@@ -68,7 +75,7 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await context.bot.send_photo(
     chat_id=BOT_ADMISSION_CHANNEL_ID,
     photo=photo,
-    caption=f"Photo from @{user.username or user.first_name}\nဘာလုပ်ချင်လဲဗျ\nApprove? Reject? Cancel? Custom..."
+    caption=f"Photo from @{user.username or user.first_name+user.last_name}\nဘာလုပ်ချင်လဲဗျ\nApprove? Reject? Cancel? Custom..."
   )
 
   await update.message.reply_text(receipt_receive)
