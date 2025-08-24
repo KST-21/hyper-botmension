@@ -1,4 +1,5 @@
-group_chat_warning_message = "You cannot use me in the group chat\nGroup chat ကြီးမှာ မသုံးနဲ့ သပစားရဲ့"
+BOT_NAME = "Hyper Botmension"
+not_private_chat_warning_message = "You cannot use me in the group chat\nGroup chat တွင် အသုံးပြုခြင်း သည်းခံပါ"
 premium_prompt_message = "Premium ရက် ၃၀ ဝင်မယ်"
 buy_something_prompt_message = "ဇာတ်ကား ဝယ်မယ်"
 welcome_message = "ဟယ်လိုပါ Extra Dimension ကနေ ကြိုဆိုပါတယ်ဗျ\n\nဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"

@@ -22,14 +22,14 @@ data: dict[str,bool] = {
 }
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  if is_group_chat(update):
-    await update.message.reply_text(group_chat_warning_message)
+  if not is_private_chat(update):
+    await update.message.reply_text(not_private_chat_warning_message)
     return
 
   global data
   keyboard = [
-    [InlineKeyboardButton(premium_prompt_message, callback_data="opt1")],
-    [InlineKeyboardButton(buy_something_prompt_message, callback_data="opt2")]
+    [InlineKeyboardButton(premium_prompt_message, callback_data="premium")],
+    [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")]
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   await update.message.reply_text(welcome_message, reply_markup=reply_markup)
@@ -39,21 +39,27 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
   query = update.callback_query
   await query.answer()
-  if query.data == "opt1":
+  if query.data == "premium":
     await query.edit_message_text(premium_invoice)
     data["allow_photo_message"] = True
-  elif query.data == "opt2":
+  elif query.data == "buy":
     await query.edit_message_text("ရော့ လိုချင်တဲ့ ဇာတ်ကား")
     data["allow_photo_message"] = False
 
-def is_group_chat(update: Update):
-  message_type = update.message.chat.type
-  return message_type == "group"
+  if query.data == "approve_join":
+    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name+query.from_user.last_name}\nJoin Approved")
+  elif query.data == "reject_join":
+    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name+query.from_user.last_name}\nJoin Rejected")
+
+def is_private_chat(update: Update):
+  return update.message and update.message.chat.type == "private"
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  if is_group_chat(update):
-    await update.message.reply_text(group_chat_warning_message)
+  if not is_private_chat(update):
+    if update.message:
+      await update.message.reply_text(not_private_chat_warning_message)
     return
+    
   await update.message.reply_text(sending_message_warning_1)
   await update.message.reply_text(sending_message_warning_2)
   
@@ -72,10 +78,16 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   photo = update.message.photo[-1].file_id  # last = best quality
 
   # Forward photo to admin group/channel for review
+  keyboard = [
+    [InlineKeyboardButton("Approve", callback_data="approve_join")],
+    [InlineKeyboardButton("Reject", callback_data="reject_join")]
+  ]
+  reply_markup = InlineKeyboardMarkup(keyboard)
   await context.bot.send_photo(
     chat_id=BOT_ADMISSION_CHANNEL_ID,
     photo=photo,
-    caption=f"Photo from @{user.username or user.first_name+user.last_name}\nဘာလုပ်ချင်လဲဗျ\nApprove? Reject? Cancel? Custom..."
+    caption=f"Photo from @{user.username or user.first_name+user.last_name}",
+    reply_markup=reply_markup
   )
 
   await update.message.reply_text(receipt_receive)
