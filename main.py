@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from typing import Final
+from typing import Final, Any
 from telegram import ChatInviteLink, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from constants import *
@@ -15,7 +15,10 @@ BOT_ADMISSION_CHANNEL_ID: Final = os.getenv("BOT_ADMISSION_CHANNEL_ID")
 BOT_RECEPTION_CHANNEL_ID: Final = os.getenv("BOT_RECEPTION_CHANNEL_ID")
 PORT = int(os.environ.get("PORT", 10000))
 
-data: dict[str, bool] = {"allow_photo_message": False}
+data: dict[str, Any] = {
+  "allow_photo_message": False,
+  "pending_custom_rejects": set()
+}
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,6 +46,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     "buy": handle_buy,
     "approve_join": handle_approve_join,
     "reject_join": handle_reject_join,
+    "custom_reject": handle_custom_reject,
+    "cancel_custom_reject": handle_cancel_custom_reject,
   }
 
   handler = dispatch.get(query.data)
@@ -98,6 +103,61 @@ async def handle_reject_join(
   data["allow_photo_message"] = True
 
 
+async def handle_custom_reject(query: CallbackQuery, context):
+  caption = query.message.caption
+  keyboard = [
+    [
+      InlineKeyboardButton(
+        "❌ Cancel Custom Reject", callback_data="cancel_custom_reject"
+      )
+    ]
+  ]
+  await query.edit_message_caption(
+    f"{caption}\nPlease reply to this message with your custom reject text.",
+    reply_markup=InlineKeyboardMarkup(keyboard)
+  )
+  data["pending_custom_rejects"].add(query.message.message_id)
+  return
+
+
+async def handle_custom_reject_message(
+  update: Update, context: ContextTypes.DEFAULT_TYPE
+):
+  if not update.channel_post:
+    await message_handler(update, context)
+    return
+  receipt_message = update.channel_post.reply_to_message
+  receipt_message_id = receipt_message.message_id
+  if receipt_message_id in data["pending_custom_rejects"]:
+    reason = update.channel_post.text
+    caption = receipt_message.caption
+    original_user_id = str(caption).split("id=")[1]
+    clean_caption = "\n".join(str(caption).split("\n")[:-1])
+    await context.bot.send_message(
+      chat_id=original_user_id,
+      text=f"Admin မှ ယခုလို အကြောင်းပြန်ပါတယ်\n\n{reason}"
+    )
+    await context.bot.edit_message_caption(
+      chat_id=BOT_ADMISSION_CHANNEL_ID,
+      message_id=receipt_message_id,
+      caption=f"{clean_caption}\nSent '''{reason}''' to user."
+    )
+    data["pending_custom_rejects"].remove(receipt_message_id)
+
+
+async def handle_cancel_custom_reject(query: CallbackQuery, context):
+  await query.answer()
+  caption = query.message.caption
+  clean_caption = "\n".join(str(caption).split("\n")[:-1])
+  keyboard = create_receipt_confirm_markup()
+
+  await query.edit_message_caption(
+    caption=clean_caption, reply_markup=InlineKeyboardMarkup(keyboard)
+  )
+  data["pending_custom_rejects"].remove(query.message.message_id)
+
+
+# helpers
 def is_private_chat(update: Update):
   return update.message and update.message.chat.type == "private"
 
@@ -118,6 +178,14 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   )
 
 
+def create_receipt_confirm_markup():
+  return [
+    [InlineKeyboardButton("Approve", callback_data="approve_join")],
+    [InlineKeyboardButton("Custom Reject", callback_data="custom_reject")],
+    [InlineKeyboardButton("Reject", callback_data="reject_join")],
+  ]
+
+
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
   if not data["allow_photo_message"]:
@@ -127,10 +195,7 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   photo = update.message.photo[-1].file_id  # last = best quality
 
   # Forward photo to admin group/channel for review
-  keyboard = [
-    [InlineKeyboardButton("Approve", callback_data="approve_join")],
-    [InlineKeyboardButton("Reject", callback_data="reject_join")],
-  ]
+  keyboard = create_receipt_confirm_markup()
   reply_markup = InlineKeyboardMarkup(keyboard)
   await context.bot.send_photo(
     chat_id=BOT_ADMISSION_CHANNEL_ID,
@@ -169,6 +234,7 @@ if __name__ == "__main__":
   app.add_handler(CommandHandler("start", start))
   app.add_handler(CallbackQueryHandler(button))
   app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+  app.add_handler(MessageHandler(filters.REPLY, handle_custom_reject_message))
   app.add_handler(MessageHandler(filters.ALL, message_handler))
 
   print("Polling...")
