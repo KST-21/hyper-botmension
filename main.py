@@ -68,10 +68,9 @@ async def handle_approve_join(
   query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
 ):
   await query.answer()
-  original_user_id = str(query.message.caption).split("id=")[1]
-  await query.edit_message_caption(
-    f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Approved"
-  )
+  caption = query.message.caption
+  original_user_id = str(caption).split("id=")[1]
+  await query.edit_message_caption(f"{caption}\nJoin Approved")
 
   invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
     chat_id=channel_ids["fake_premium_channel_id"],
@@ -88,13 +87,13 @@ async def handle_reject_join(
   query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
 ):
   await query.answer()
-  original_user_id = str(query.message.caption).split("id=")[1]
+  caption = query.message.caption
+  original_user_id = str(caption).split("id=")[1]
   await query.edit_message_caption(
-    f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Rejected"
+    f"{caption}\nJoin Rejected\nSent '''{receipt_rejected}''' to user"
   )
   await context.bot.send_message(
-    chat_id=original_user_id,
-    text="လက်ခံရရှိသော ပြေစာပယ်ချခံရပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
+    chat_id=original_user_id, text=receipt_rejected
   )
   data["allow_photo_message"] = True
 
