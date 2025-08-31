@@ -7,7 +7,6 @@ from constants import *
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 
-
 load_dotenv()
 
 # Access variables
@@ -16,10 +15,8 @@ BOT_ADMISSION_CHANNEL_ID: Final = os.getenv("BOT_ADMISSION_CHANNEL_ID")
 BOT_RECEPTION_CHANNEL_ID: Final = os.getenv("BOT_RECEPTION_CHANNEL_ID")
 PORT = int(os.environ.get("PORT", 10000))
 
+data: dict[str, bool] = {"allow_photo_message": False}
 
-data: dict[str,bool] = {
-  "allow_photo_message": False
-}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   if not is_private_chat(update):
@@ -29,11 +26,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
   keyboard = [
     [InlineKeyboardButton(premium_prompt_message, callback_data="premium")],
-    [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")]
+    [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")],
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   await update.message.reply_text(welcome_message, reply_markup=reply_markup)
   data["allow_photo_message"] = False
+
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
@@ -52,7 +50,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   original_user_id = str(query.message.caption).split("id=")[1]
   if query.data == "approve_join":
-    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Approved")
+    await query.edit_message_caption(
+      f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Approved"
+    )
 
     invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
       chat_id=channel_ids["fake_premium_channel_id"],
@@ -64,9 +64,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
       text=f"Premium Channel link\n{invite_link.invite_link}"
     )
     return
-    
+
   elif query.data == "reject_join":
-    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Rejected")
+    await query.edit_message_caption(
+      f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Rejected"
+    )
     await context.bot.send_message(
       chat_id=original_user_id,
       text="လက်ခံရရှိသော ပြေစာပယ်ချခံရပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
@@ -74,23 +76,26 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data["allow_photo_message"] = True
     return
 
+
 def is_private_chat(update: Update):
   return update.message and update.message.chat.type == "private"
+
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   if not is_private_chat(update):
     if update.message:
       await update.message.reply_text(not_private_chat_warning_message)
     return
-    
+
   await update.message.reply_text(sending_message_warning_1)
   await update.message.reply_text(sending_message_warning_2)
-  
+
   await context.bot.forward_message(
     chat_id=BOT_RECEPTION_CHANNEL_ID,
     from_chat_id=update.message.chat_id,
     message_id=update.message.message_id
   )
+
 
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
@@ -103,13 +108,14 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   # Forward photo to admin group/channel for review
   keyboard = [
     [InlineKeyboardButton("Approve", callback_data="approve_join")],
-    [InlineKeyboardButton("Reject", callback_data="reject_join")]
+    [InlineKeyboardButton("Reject", callback_data="reject_join")],
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   await context.bot.send_photo(
     chat_id=BOT_ADMISSION_CHANNEL_ID,
     photo=photo,
-    caption=f"Photo from @{user.username or user.first_name+user.last_name}\nid={user.id}",
+    caption=
+    f"Photo from @{user.username or user.first_name+user.last_name}\nid={user.id}",
     reply_markup=reply_markup
   )
   await context.bot.forward_message(
@@ -120,13 +126,15 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   await update.message.reply_text(receipt_receive)
   data["allow_photo_message"] = False
-  
+
+
 class Handler(BaseHTTPRequestHandler):
+
   def do_GET(self):
     self.send_response(200)
     self.end_headers()
     self.wfile.write(b"Bot is running!")
-    
+
   def do_HEAD(self):
     self.send_response(200)
     self.end_headers()
