@@ -7,3 +7,7 @@ premium_invoice = "KPay number ဘာညာကွိကွကို ပိုက
 sending_message_warning_1 = "ရွေးချယ်နိုင်သော ခလုတ်များကို နှိပ်၍သာ bot ကို အသုံးပြုပါ"
 sending_message_warning_2 = "bot ကို /start ဟု ပို့၍သော်လည်းကောင်း နှိပ်၍သော်လည်းကောင်း ဆက်သွယ်နိုင်ပါသည်"
 receipt_receive = "ပြေစာလက်ခံရရှိပါသည်\nအိပ်ချိန်ကလွဲ၍ ကျန်တဲ့အချိန်များတွင် ၃နာရီအတွင်း Admin တစ်ယောက် စစ်ဆေးပြီးလျှင် ဒီကနေ Link ပို့ပေးပါမယ်"
+
+channel_ids = {
+  "fake_premium_channel_id": "-1002917136045"
+}

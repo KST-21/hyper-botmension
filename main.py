@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from typing import Final
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import ChatInviteLink, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from constants import *
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -38,18 +38,41 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
   global data
   query = update.callback_query
+  if not query:
+    return
   await query.answer()
   if query.data == "premium":
     await query.edit_message_text(premium_invoice)
     data["allow_photo_message"] = True
+    return
   elif query.data == "buy":
     await query.edit_message_text("ရော့ လိုချင်တဲ့ ဇာတ်ကား")
     data["allow_photo_message"] = False
+    return
 
+  original_user_id = str(query.message.caption).split("id=")[1]
   if query.data == "approve_join":
-    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name+query.from_user.last_name}\nJoin Approved")
+    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Approved")
+
+    invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
+      chat_id=channel_ids["fake_premium_channel_id"],
+      member_limit=1,
+      creates_join_request=False
+    )
+    await context.bot.send_message(
+      chat_id=original_user_id,
+      text=f"Premium Channel link\n{invite_link.invite_link}"
+    )
+    return
+    
   elif query.data == "reject_join":
-    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name+query.from_user.last_name}\nJoin Rejected")
+    await query.edit_message_caption(f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Rejected")
+    await context.bot.send_message(
+      chat_id=original_user_id,
+      text="လက်ခံရရှိသော ပြေစာပယ်ချခံရပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
+    )
+    data["allow_photo_message"] = True
+    return
 
 def is_private_chat(update: Update):
   return update.message and update.message.chat.type == "private"
@@ -86,8 +109,13 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await context.bot.send_photo(
     chat_id=BOT_ADMISSION_CHANNEL_ID,
     photo=photo,
-    caption=f"Photo from @{user.username or user.first_name+user.last_name}",
+    caption=f"Photo from @{user.username or user.first_name+user.last_name}\nid={user.id}",
     reply_markup=reply_markup
+  )
+  await context.bot.forward_message(
+    chat_id=BOT_RECEPTION_CHANNEL_ID,
+    from_chat_id=update.message.chat_id,
+    message_id=update.message.message_id
   )
 
   await update.message.reply_text(receipt_receive)
