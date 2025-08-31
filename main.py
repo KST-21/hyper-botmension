@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from typing import Final
-from telegram import ChatInviteLink, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import ChatInviteLink, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from constants import *
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -34,47 +34,69 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  global data
   query = update.callback_query
   if not query:
     return
+
+  dispatch = {
+    "premium": handle_premium,
+    "buy": handle_buy,
+    "approve_join": handle_approve_join,
+    "reject_join": handle_reject_join,
+  }
+
+  handler = dispatch.get(query.data)
+  if handler:
+    await handler(query, context)
+
+
+async def handle_premium(
+  query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
+):
   await query.answer()
-  if query.data == "premium":
-    await query.edit_message_text(premium_invoice)
-    data["allow_photo_message"] = True
-    return
-  elif query.data == "buy":
-    await query.edit_message_text("ရော့ လိုချင်တဲ့ ဇာတ်ကား")
-    data["allow_photo_message"] = False
-    return
+  await query.edit_message_text(premium_invoice)
+  data["allow_photo_message"] = True
 
+
+async def handle_buy(query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+  await query.answer()
+  await query.edit_message_text("ရော့ လိုချင်တဲ့ ဇာတ်ကား")
+  data["allow_photo_message"] = False
+
+
+async def handle_approve_join(
+  query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
+):
+  await query.answer()
   original_user_id = str(query.message.caption).split("id=")[1]
-  if query.data == "approve_join":
-    await query.edit_message_caption(
-      f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Approved"
-    )
+  await query.edit_message_caption(
+    f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Approved"
+  )
 
-    invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
-      chat_id=channel_ids["fake_premium_channel_id"],
-      member_limit=1,
-      creates_join_request=False
-    )
-    await context.bot.send_message(
-      chat_id=original_user_id,
-      text=f"Premium Channel link\n{invite_link.invite_link}"
-    )
-    return
+  invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
+    chat_id=channel_ids["fake_premium_channel_id"],
+    member_limit=1,
+    creates_join_request=False
+  )
+  await context.bot.send_message(
+    chat_id=original_user_id,
+    text=f"Premium Channel link\n{invite_link.invite_link}"
+  )
 
-  elif query.data == "reject_join":
-    await query.edit_message_caption(
-      f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Rejected"
-    )
-    await context.bot.send_message(
-      chat_id=original_user_id,
-      text="လက်ခံရရှိသော ပြေစာပယ်ချခံရပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
-    )
-    data["allow_photo_message"] = True
-    return
+
+async def handle_reject_join(
+  query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
+):
+  await query.answer()
+  original_user_id = str(query.message.caption).split("id=")[1]
+  await query.edit_message_caption(
+    f"Photo from @{query.from_user.username or query.from_user.first_name}\nJoin Rejected"
+  )
+  await context.bot.send_message(
+    chat_id=original_user_id,
+    text="လက်ခံရရှိသော ပြေစာပယ်ချခံရပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
+  )
+  data["allow_photo_message"] = True
 
 
 def is_private_chat(update: Update):
