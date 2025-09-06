@@ -1,241 +1,40 @@
-import os
-from dotenv import load_dotenv
-from typing import Final, Any
-from telegram import ChatInviteLink, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
-from constants import *
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import threading
-
-load_dotenv()
-
-# Access variables
-TOKEN: Final = os.getenv("TOKEN")
-BOT_ADMISSION_CHANNEL_ID: Final = os.getenv("BOT_ADMISSION_CHANNEL_ID")
-BOT_RECEPTION_CHANNEL_ID: Final = os.getenv("BOT_RECEPTION_CHANNEL_ID")
-PORT = int(os.environ.get("PORT", 10000))
-
-data: dict[str, Any] = {
-  "allow_photo_message": False,
-  "pending_custom_rejects": set()
-}
+import logging
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
+from config import TOKEN
+from handlers.messages import message_handler
+from helpers.http_server import start_http_server
+from handlers.start import start
+from handlers.buttons import button
+from handlers.photos import photo_handler
+from handlers.receipt import handle_custom_reject_message
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  if not is_private_chat(update):
-    await update.message.reply_text(not_private_chat_warning_message)
-    return
+def main():
+  if not TOKEN:
+    raise RuntimeError("❌ BOT TOKEN is missing from environment variables")
 
-  global data
-  keyboard = [
-    [InlineKeyboardButton(premium_prompt_message, callback_data="premium")],
-    [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")],
-  ]
-  reply_markup = InlineKeyboardMarkup(keyboard)
-  await update.message.reply_text(welcome_message, reply_markup=reply_markup)
-  data["allow_photo_message"] = False
+  logging.basicConfig(level=logging.INFO)
+  logger = logging.getLogger(__name__)
 
+  logger.info("Starting bot...")
+  start_http_server()
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  query = update.callback_query
-  if not query:
-    return
+  app = Application.builder().token(TOKEN).build()
 
-  dispatch = {
-    "premium": handle_premium,
-    "buy": handle_buy,
-    "approve_join": handle_approve_join,
-    "reject_join": handle_reject_join,
-    "custom_reject": handle_custom_reject,
-    "cancel_custom_reject": handle_cancel_custom_reject,
-  }
-
-  handler = dispatch.get(query.data)
-  if handler:
-    await handler(query, context)
-
-
-async def handle_premium(
-  query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
-):
-  await query.answer()
-  await query.edit_message_text(premium_invoice)
-  data["allow_photo_message"] = True
-
-
-async def handle_buy(query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
-  await query.answer()
-  await query.edit_message_text("ရော့ လိုချင်တဲ့ ဇာတ်ကား")
-  data["allow_photo_message"] = False
-
-
-async def handle_approve_join(
-  query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
-):
-  await query.answer()
-  caption = query.message.caption
-  original_user_id = str(caption).split("id=")[1]
-  await query.edit_message_caption(f"{caption}\nJoin Approved")
-
-  invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
-    chat_id=channel_ids["fake_premium_channel_id"],
-    member_limit=1,
-    creates_join_request=False
-  )
-  await context.bot.send_message(
-    chat_id=original_user_id,
-    text=f"Premium Channel link\n{invite_link.invite_link}"
-  )
-
-
-async def handle_reject_join(
-  query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE
-):
-  await query.answer()
-  caption = query.message.caption
-  original_user_id = str(caption).split("id=")[1]
-  await query.edit_message_caption(
-    f"{caption}\nJoin Rejected\nSent '''{receipt_rejected}''' to user"
-  )
-  await context.bot.send_message(
-    chat_id=original_user_id, text=receipt_rejected
-  )
-  data["allow_photo_message"] = True
-
-
-async def handle_custom_reject(query: CallbackQuery, context):
-  caption = query.message.caption
-  keyboard = [
-    [
-      InlineKeyboardButton(
-        "❌ Cancel Custom Reject", callback_data="cancel_custom_reject"
-      )
-    ]
-  ]
-  await query.edit_message_caption(
-    f"{caption}\nPlease reply to this message with your custom reject text.",
-    reply_markup=InlineKeyboardMarkup(keyboard)
-  )
-  data["pending_custom_rejects"].add(query.message.message_id)
-  return
-
-
-async def handle_custom_reject_message(
-  update: Update, context: ContextTypes.DEFAULT_TYPE
-):
-  if not update.channel_post:
-    await message_handler(update, context)
-    return
-  receipt_message = update.channel_post.reply_to_message
-  receipt_message_id = receipt_message.message_id
-  if receipt_message_id in data["pending_custom_rejects"]:
-    reason = update.channel_post.text
-    caption = receipt_message.caption
-    original_user_id = str(caption).split("id=")[1]
-    clean_caption = "\n".join(str(caption).split("\n")[:-1])
-    await context.bot.send_message(
-      chat_id=original_user_id,
-      text=f"Admin မှ ယခုလို အကြောင်းပြန်ပါတယ်\n\n{reason}"
-    )
-    await context.bot.edit_message_caption(
-      chat_id=BOT_ADMISSION_CHANNEL_ID,
-      message_id=receipt_message_id,
-      caption=f"{clean_caption}\nSent '''{reason}''' to user."
-    )
-    data["pending_custom_rejects"].remove(receipt_message_id)
-
-
-async def handle_cancel_custom_reject(query: CallbackQuery, context):
-  await query.answer()
-  caption = query.message.caption
-  clean_caption = "\n".join(str(caption).split("\n")[:-1])
-  keyboard = create_receipt_confirm_markup()
-
-  await query.edit_message_caption(
-    caption=clean_caption, reply_markup=InlineKeyboardMarkup(keyboard)
-  )
-  data["pending_custom_rejects"].remove(query.message.message_id)
-
-
-# helpers
-def is_private_chat(update: Update):
-  return update.message and update.message.chat.type == "private"
-
-
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  if not is_private_chat(update):
-    if update.message:
-      await update.message.reply_text(not_private_chat_warning_message)
-    return
-
-  await update.message.reply_text(sending_message_warning_1)
-  await update.message.reply_text(sending_message_warning_2)
-
-  await context.bot.forward_message(
-    chat_id=BOT_RECEPTION_CHANNEL_ID,
-    from_chat_id=update.message.chat_id,
-    message_id=update.message.message_id
-  )
-
-
-def create_receipt_confirm_markup():
-  return [
-    [InlineKeyboardButton("Approve", callback_data="approve_join")],
-    [InlineKeyboardButton("Custom Reject", callback_data="custom_reject")],
-    [InlineKeyboardButton("Reject", callback_data="reject_join")],
+  handlers = [
+    CommandHandler("start", start),
+    CallbackQueryHandler(button),
+    MessageHandler(filters.PHOTO, photo_handler),
+    MessageHandler(filters.REPLY, handle_custom_reject_message),
+    MessageHandler(filters.ALL, message_handler),
   ]
 
+  for h in handlers:
+    app.add_handler(h)
 
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  global data
-  if not data["allow_photo_message"]:
-    await message_handler(update, context)
-    return
-  user = update.message.from_user
-  photo = update.message.photo[-1].file_id  # last = best quality
-
-  # Forward photo to admin group/channel for review
-  keyboard = create_receipt_confirm_markup()
-  reply_markup = InlineKeyboardMarkup(keyboard)
-  await context.bot.send_photo(
-    chat_id=BOT_ADMISSION_CHANNEL_ID,
-    photo=photo,
-    caption=
-    f"Photo from @{user.username or user.first_name+user.last_name}\nid={user.id}",
-    reply_markup=reply_markup
-  )
-  await context.bot.forward_message(
-    chat_id=BOT_RECEPTION_CHANNEL_ID,
-    from_chat_id=update.message.chat_id,
-    message_id=update.message.message_id
-  )
-
-  await update.message.reply_text(receipt_receive)
-  data["allow_photo_message"] = False
-
-
-class Handler(BaseHTTPRequestHandler):
-
-  def do_GET(self):
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(b"Bot is running!")
-
-  def do_HEAD(self):
-    self.send_response(200)
-    self.end_headers()
+  logger.info("Polling...")
+  app.run_polling()
 
 
 if __name__ == "__main__":
-  print("Starting bot...")
-  server = HTTPServer(("", PORT), Handler)
-  threading.Thread(target=server.serve_forever, daemon=True).start()
-  app = Application.builder().token(TOKEN).build()
-  app.add_handler(CommandHandler("start", start))
-  app.add_handler(CallbackQueryHandler(button))
-  app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
-  app.add_handler(MessageHandler(filters.REPLY, handle_custom_reject_message))
-  app.add_handler(MessageHandler(filters.ALL, message_handler))
-
-  print("Polling...")
-  app.run_polling()
+  main()
