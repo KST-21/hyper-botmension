@@ -1,3 +1,4 @@
+import re
 from telegram import InlineKeyboardButton, Message, Update
 from telegram.ext import ContextTypes
 from constants import *
@@ -52,3 +53,11 @@ def create_receipt_confirm_markup():
     [InlineKeyboardButton("Custom Reject", callback_data="custom_reject")],
     [InlineKeyboardButton("Reject", callback_data="reject_join")],
   ]
+
+
+def escape_md(text: str) -> str:
+  return re.sub(r'([_*\[\]()~`>#+\-=|{}.!])', r'\\\1', text)
+
+
+def get_channel_internal_id(id: int) -> str:
+  return str(id).replace("-100", "", 1)
