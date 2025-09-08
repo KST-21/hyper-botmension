@@ -1,3 +1,5 @@
+from helpers.types import Channels
+
 BOT_NAME = "Hyper Botmension"
 not_private_chat_warning_message = "You cannot use me in the group chat\nGroup chat တွင် အသုံးပြုခြင်း သည်းခံပါ"
 premium_prompt_message = "Premium ရက် ၃၀ ဝင်မယ်"
@@ -9,4 +11,28 @@ sending_message_warning_2 = "bot ကို /start ဟု ပို့၍သေ�
 receipt_receive = "ပြေစာလက်ခံရရှိပါသည်\nအိပ်ချိန်ကလွဲ၍ ကျန်တဲ့အချိန်များတွင် ၃နာရီအတွင်း Admin တစ်ယောက် စစ်ဆေးပြီးလျှင် ဒီကနေ Link ပို့ပေးပါမယ်"
 receipt_rejected = "ပြေစာ မှားရွင်းနေပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
 
-channels = {"fake_premium_channel_id": "-1002917136045"}
+channels: Channels = {
+  "fake_premium_channel_id": -1002917136045,
+  "fake_public_channel_id": -1002764951583,
+  "fake_private_channels": {
+    "testing_private_channel_for_beta": {
+      "id": -1002906977198
+    }
+  },
+  "hyper_space": -1002315991423,
+  "private_channels": {
+    "hyper_space_domain": {
+      "id": -1002968318914,
+    },
+  },
+  "premium_channels": {
+    "name1": {
+      "id": 1234,
+      "price": 12345,
+    },
+    "name2": {
+      "id": 5678,
+      "price": 67890,
+    }
+  }
+}
