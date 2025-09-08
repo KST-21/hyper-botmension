@@ -9,6 +9,4 @@ sending_message_warning_2 = "bot ကို /start ဟု ပို့၍သေ�
 receipt_receive = "ပြေစာလက်ခံရရှိပါသည်\nအိပ်ချိန်ကလွဲ၍ ကျန်တဲ့အချိန်များတွင် ၃နာရီအတွင်း Admin တစ်ယောက် စစ်ဆေးပြီးလျှင် ဒီကနေ Link ပို့ပေးပါမယ်"
 receipt_rejected = "ပြေစာ မှားရွင်းနေပါသည်\nပြေစာပြန်လည် ပေးပို့ပေးပါ"
 
-channel_ids = {
-  "fake_premium_channel_id": "-1002917136045"
-}
+channels = {"fake_premium_channel_id": "-1002917136045"}

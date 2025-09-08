@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 from helpers.utils import clean_caption, extract_user_id_from_caption, create_receipt_confirm_markup, message_handler
 from config import BOT_ADMISSION_CHANNEL_ID
 from .start import data
-from constants import channel_ids, receipt_rejected
+from constants import channels, receipt_rejected
 
 
 async def handle_approve_join(
@@ -18,7 +18,7 @@ async def handle_approve_join(
   await query.edit_message_caption(f"{caption}\nJoin Approved")
 
   invite_link: ChatInviteLink = await context.bot.create_chat_invite_link(
-    chat_id=channel_ids["fake_premium_channel_id"],
+    chat_id=channels["fake_premium_channel_id"],
     member_limit=1,
     creates_join_request=False
   )
