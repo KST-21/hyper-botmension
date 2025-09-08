@@ -10,16 +10,16 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
   update_message = update.message
 
-  if not data["allow_photo_message"]:
+  user = update_message.from_user
+  if not user:
+    return
+
+  if not user.id in data["allow_photo_message"]:
     await message_handler(update, context)
     return
 
-  user = update_message.from_user
   photo = update_message.photo[-1].file_id
   keyboard = create_receipt_confirm_markup()
-
-  if not user:
-    return
 
   await context.bot.send_photo(
     chat_id=BOT_ADMISSION_CHANNEL_ID,
@@ -31,4 +31,4 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await forward_message(update_message, context)
 
   await update_message.reply_text(receipt_receive)
-  data["allow_photo_message"] = False
+  data["allow_photo_message"].remove(user.id)

@@ -13,6 +13,6 @@ PORT: int = int(os.environ.get("PORT", 10000))
 
 # runtime state (could move to Redis/DB later)
 data: Data = {
-  "allow_photo_message": False,
+  "allow_photo_message": set(),
   "pending_custom_rejects": set(),
 }
