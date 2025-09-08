@@ -18,4 +18,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   await update.message.reply_text(welcome_message, reply_markup=reply_markup)
-  data["allow_photo_message"] = False
+
+  user = update.message.from_user
+  if user and user.id in data["allow_photo_message"]:
+    data["allow_photo_message"].remove(user.id)

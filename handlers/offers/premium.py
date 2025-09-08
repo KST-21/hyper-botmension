@@ -9,4 +9,5 @@ async def handle_premium(
 ):
   await query.answer()
   await query.edit_message_text(premium_invoice)
-  data["allow_photo_message"] = True
+  user_id = query.from_user.id
+  data["allow_photo_message"].add(user_id)

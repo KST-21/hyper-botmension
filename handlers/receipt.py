@@ -43,7 +43,7 @@ async def handle_reject_join(
   await context.bot.send_message(
     chat_id=original_user_id, text=receipt_rejected
   )
-  data["allow_photo_message"] = True
+  data["allow_photo_message"].add(int(original_user_id))
 
 
 async def handle_custom_reject(
