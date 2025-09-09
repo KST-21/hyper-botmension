@@ -22,3 +22,9 @@ class Channels(TypedDict):
   fake_public_channel_id: int
   fake_premium_channel_id: int
   fake_private_channels: dict[str, PrivateChannel]
+
+
+class BOT_INFO_TYPE(TypedDict):
+  name: str | None
+  username: str | None
+  is_beta: bool | None

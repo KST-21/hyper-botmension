@@ -3,6 +3,9 @@ from telegram import InlineKeyboardButton, Message, Update
 from telegram.ext import ContextTypes
 from constants import *
 from config import BOT_RECEPTION_CHANNEL_ID
+from typing import Callable, Iterable, TypeVar
+
+T = TypeVar("T")
 
 
 def is_private_chat(update: Update):
@@ -61,3 +64,19 @@ def escape_md(text: str) -> str:
 
 def get_channel_internal_id(id: int) -> str:
   return str(id).replace("-100", "", 1)
+
+
+def get_public_channel_id() -> int:
+  if BOT_INFO["is_beta"]:
+    return channels["fake_public_channel_id"]
+  return channels["hyper_space"]
+
+
+def get_private_channel_ids(data_type: Callable[[Iterable[int]], T]) -> T:
+  if BOT_INFO["is_beta"]:
+    return data_type(
+      data["id"] for data in channels["fake_private_channels"].values()
+    )
+  return data_type(
+    data["id"] for data in channels["private_channels"].values()
+  )
