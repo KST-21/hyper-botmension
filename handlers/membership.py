@@ -3,8 +3,7 @@ from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
 from config import BOT_RECEPTION_CHANNEL_ID
-from constants import channels
-from helpers.utils import escape_md, get_channel_internal_id
+from helpers.utils import escape_md, get_channel_internal_id, get_private_channel_ids, get_public_channel_id
 
 
 async def check_subscription(
@@ -26,13 +25,16 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
   user = update.chat_join_request.from_user
   user_reference = f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
 
+  private_channel_ids = get_private_channel_ids(set)
+
   requested_channel = update.chat_join_request.chat
+  if requested_channel.id not in private_channel_ids:
+    return
+
   requested_channel_internal_id = get_channel_internal_id(requested_channel.id)
   requested_channel_reference = f"[{escape_md(requested_channel.title or '')}]({escape_md(f'https://t.me/c/{requested_channel_internal_id}/1')})"
 
-  public_channel = await context.bot.get_chat(
-    channels['fake_public_channel_id']
-  )
+  public_channel = await context.bot.get_chat(get_public_channel_id())
   public_channel_internal_id = get_channel_internal_id(public_channel.id)
   public_channel_reference = f"[{escape_md(public_channel.title or '')}]({escape_md(f'https://t.me/c/{public_channel_internal_id}/1')})"
 
@@ -86,7 +88,7 @@ async def handle_user_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = result.from_user
     user_reference = f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
     chat = result.chat
-    public_channel_id = channels["fake_public_channel_id"]
+    public_channel_id = get_public_channel_id()
 
     if chat.id != public_channel_id:
       return
@@ -95,9 +97,7 @@ async def handle_user_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
     public_channel_internal_id = get_channel_internal_id(public_channel.id)
     public_channel_reference = f"[{escape_md(public_channel.title or '')}]({escape_md(f'https://t.me/c/{public_channel_internal_id}/1')})"
 
-    private_channel_ids = tuple(
-      data["id"] for data in channels["private_channels"].values()
-    )
+    private_channel_ids = get_private_channel_ids(tuple)
     for private_channel_id in private_channel_ids:
       if not await check_subscription(user.id, private_channel_id, context):
         continue

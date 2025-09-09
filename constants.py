@@ -1,10 +1,19 @@
-from helpers.types import Channels
+from helpers.types import BOT_INFO_TYPE, Channels
 
-BOT_NAME = "Hyper Botmension"
+BOT_INFO: BOT_INFO_TYPE = {"name": None, "username": None, "is_beta": None}
+
+
+def get_welcome_message() -> str:
+  name = BOT_INFO["name"] or "Bot"
+  return (
+    f"ဟယ်လိုပါ {name} ကနေ ကြိုဆိုပါတယ်ဗျ\n\n"
+    "ဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"
+  )
+
+
 not_private_chat_warning_message = "You cannot use me in the group chat\nGroup chat တွင် အသုံးပြုခြင်း သည်းခံပါ"
 premium_prompt_message = "Premium ရက် ၃၀ ဝင်မယ်"
 buy_something_prompt_message = "ဇာတ်ကား ဝယ်မယ်"
-welcome_message = f"ဟယ်လိုပါ {BOT_NAME} ကနေ ကြိုဆိုပါတယ်ဗျ\n\nဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"
 premium_invoice = "KPay number ဘာညာကွိကွကို ပိုက်ဆံ ၃၀၀၀ လွှဲ၍ screenshot ပြန်ပို့ပေးပါ\nscreenshot ကို Admin တစ်ယောက် စစ်ဆေးပြီးပါက Channel ထဲဝင်ဖို့ link ပို့ပေးပါလိမ့်မယ်"
 sending_message_warning_1 = "ရွေးချယ်နိုင်သော ခလုတ်များကို နှိပ်၍သာ bot ကို အသုံးပြုပါ"
 sending_message_warning_2 = "bot ကို /start ဟု ပို့၍သော်လည်းကောင်း နှိပ်၍သော်လည်းကောင်း ဆက်သွယ်နိုင်ပါသည်"

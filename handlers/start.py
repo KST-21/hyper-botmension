@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from constants import welcome_message, not_private_chat_warning_message, premium_prompt_message, buy_something_prompt_message
+from constants import get_welcome_message, not_private_chat_warning_message, premium_prompt_message, buy_something_prompt_message
 from config import data
 from helpers.utils import is_private_chat
 
@@ -17,6 +17,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")],
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
+  welcome_message = get_welcome_message()
   await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
   user = update.message.from_user
