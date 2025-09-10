@@ -2,7 +2,7 @@ from telegram import ChatMember, Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
-from config import BOT_RECEPTION_CHANNEL_ID
+from config import BOT_RECEPTION_CHANNEL_ID, JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
 from helpers.utils import escape_md, get_channel_internal_id, get_private_channel_ids, get_public_channel_id
 
 
@@ -70,13 +70,29 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def handle_user_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_user_membership(
+  update: Update, context: ContextTypes.DEFAULT_TYPE
+):
   result = update.chat_member
-  if not (result and BOT_RECEPTION_CHANNEL_ID):
+  if not (
+    result and BOT_RECEPTION_CHANNEL_ID and JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
+  ):
     return
 
   if result.old_chat_member is None:
     return
+
+  user = result.from_user
+  user_reference = f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
+  chat = result.chat
+  public_channel_id = get_public_channel_id()
+
+  if chat.id != public_channel_id:
+    return
+
+  public_channel = await context.bot.get_chat(public_channel_id)
+  public_channel_internal_id = get_channel_internal_id(public_channel.id)
+  public_channel_reference = f"[{escape_md(public_channel.title or '')}]({escape_md(f'https://t.me/c/{public_channel_internal_id}/1')})"
 
   old_status = result.old_chat_member.status
   new_status = result.new_chat_member.status
@@ -85,17 +101,11 @@ async def handle_user_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR,
     ChatMemberStatus.OWNER
   ) and new_status in (ChatMemberStatus.LEFT, ChatMemberStatus.BANNED):
-    user = result.from_user
-    user_reference = f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
-    chat = result.chat
-    public_channel_id = get_public_channel_id()
-
-    if chat.id != public_channel_id:
-      return
-
-    public_channel = await context.bot.get_chat(public_channel_id)
-    public_channel_internal_id = get_channel_internal_id(public_channel.id)
-    public_channel_reference = f"[{escape_md(public_channel.title or '')}]({escape_md(f'https://t.me/c/{public_channel_internal_id}/1')})"
+    await context.bot.send_message(
+      chat_id=JOIN_LEAVE_NOTIFICATION_CHANNEL_ID,
+      text=f"{user_reference} left {public_channel_reference}",
+      parse_mode="MarkdownV2"
+    )
 
     private_channel_ids = get_private_channel_ids(tuple)
     for private_channel_id in private_channel_ids:
@@ -121,3 +131,12 @@ async def handle_user_left(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{user_reference} ဆိုတဲ့ကောင် {public_channel_reference} channel ကို subscribe လာဖြုတ်လို့ {private_channel_reference} channel ကနေ Kick လိုက်ပြီ",
         parse_mode="MarkdownV2"
       )
+
+  elif old_status in (
+    ChatMemberStatus.LEFT, ChatMemberStatus.BANNED
+  ) and new_status == ChatMemberStatus.MEMBER:
+    await context.bot.send_message(
+      chat_id=JOIN_LEAVE_NOTIFICATION_CHANNEL_ID,
+      text=f"{user_reference} joined {public_channel_reference}",
+      parse_mode="MarkdownV2"
+    )

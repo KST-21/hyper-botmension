@@ -3,7 +3,7 @@ from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ChatMemberHandler, ChatJoinRequestHandler
 from config import BETA_BOT_USERNAME, TOKEN
 from constants import BOT_INFO
-from handlers.membership import handle_user_left, join_request
+from handlers.membership import handle_user_membership, join_request
 from handlers.messages import message_handler
 from helpers.http_server import start_http_server
 from handlers.start import start
@@ -40,7 +40,7 @@ def main():
     MessageHandler(filters.PHOTO, photo_handler),
     MessageHandler(filters.REPLY, handle_custom_reject_message),
     MessageHandler(filters.ALL, message_handler),
-    ChatMemberHandler(handle_user_left, ChatMemberHandler.CHAT_MEMBER),
+    ChatMemberHandler(handle_user_membership, ChatMemberHandler.CHAT_MEMBER),
     ChatJoinRequestHandler(join_request),
   ]
 
