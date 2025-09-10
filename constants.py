@@ -5,9 +5,11 @@ BOT_INFO: BOT_INFO_TYPE = {"name": None, "username": None, "is_beta": None}
 
 def get_welcome_message() -> str:
   name = BOT_INFO["name"] or "Bot"
+  # commented out the feature that won't support yet
   return (
     f"ဟယ်လိုပါ {name} ကနေ ကြိုဆိုပါတယ်ဗျ\n\n"
-    "ဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"
+    "New features coming soon..."
+    # "ဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"
   )
 
 

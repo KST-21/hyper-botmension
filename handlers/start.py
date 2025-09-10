@@ -18,7 +18,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   welcome_message = get_welcome_message()
-  await update.message.reply_text(welcome_message, reply_markup=reply_markup)
+  # commented out the feature that won't support yet
+  # await update.message.reply_text(welcome_message, reply_markup=reply_markup)
+  await update.message.reply_text(welcome_message)
 
   user = update.message.from_user
   if user and user.id in data["allow_photo_message"]:
