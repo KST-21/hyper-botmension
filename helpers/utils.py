@@ -1,5 +1,5 @@
 import re
-from telegram import InlineKeyboardButton, Message, Update
+from telegram import Chat, ChatFullInfo, InlineKeyboardButton, Message, Update, User
 from telegram.ext import ContextTypes
 from constants import *
 from config import BOT_RECEPTION_CHANNEL_ID
@@ -53,3 +53,12 @@ def get_private_channel_ids(data_type: Callable[[Iterable[int]], T]) -> T:
   return data_type(
     data["id"] for data in channels["private_channels"].values()
   )
+
+
+def get_user_reference(user: User):
+  return f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
+
+
+def get_channel_reference(channel_id: int, channel_title: str | None):
+  internal_id = get_channel_internal_id(channel_id)
+  return f"[{escape_md(channel_title or '')}]({escape_md(f'https://t.me/c/{internal_id}/1')})"

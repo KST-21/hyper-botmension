@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
 from config import BOT_RECEPTION_CHANNEL_ID, JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
-from helpers.utils import escape_md, get_channel_internal_id, get_private_channel_ids, get_public_channel_id
+from helpers.utils import escape_md, get_channel_internal_id, get_channel_reference, get_private_channel_ids, get_public_channel_id, get_user_reference
 
 
 async def check_subscription(
@@ -23,7 +23,7 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
 
   user = update.chat_join_request.from_user
-  user_reference = f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
+  user_reference = get_user_reference(user)
 
   private_channel_ids = get_private_channel_ids(set)
 
@@ -31,12 +31,14 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
   if requested_channel.id not in private_channel_ids:
     return
 
-  requested_channel_internal_id = get_channel_internal_id(requested_channel.id)
-  requested_channel_reference = f"[{escape_md(requested_channel.title or '')}]({escape_md(f'https://t.me/c/{requested_channel_internal_id}/1')})"
+  requested_channel_reference = get_channel_reference(
+    requested_channel.id, requested_channel.title
+  )
 
   public_channel = await context.bot.get_chat(get_public_channel_id())
-  public_channel_internal_id = get_channel_internal_id(public_channel.id)
-  public_channel_reference = f"[{escape_md(public_channel.title or '')}]({escape_md(f'https://t.me/c/{public_channel_internal_id}/1')})"
+  public_channel_reference = get_channel_reference(
+    public_channel.id, public_channel.title
+  )
 
   if await check_subscription(user.id, public_channel.id, context):
     await update.chat_join_request.approve()
@@ -83,16 +85,17 @@ async def handle_user_membership(
     return
 
   user = result.from_user
-  user_reference = f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
+  user_reference = get_user_reference(user)
   chat = result.chat
   public_channel_id = get_public_channel_id()
 
   if chat.id != public_channel_id:
     return
 
-  public_channel = await context.bot.get_chat(public_channel_id)
-  public_channel_internal_id = get_channel_internal_id(public_channel.id)
-  public_channel_reference = f"[{escape_md(public_channel.title or '')}]({escape_md(f'https://t.me/c/{public_channel_internal_id}/1')})"
+  public_channel = await context.bot.get_chat(get_public_channel_id())
+  public_channel_reference = get_channel_reference(
+    public_channel.id, public_channel.title
+  )
 
   old_status = result.old_chat_member.status
   new_status = result.new_chat_member.status
@@ -112,8 +115,9 @@ async def handle_user_membership(
       if not await check_subscription(user.id, private_channel_id, context):
         continue
       private_channel = await context.bot.get_chat(private_channel_id)
-      private_channel_internal_id = get_channel_internal_id(private_channel.id)
-      private_channel_reference = f"[{escape_md(private_channel.title or '')}]({escape_md(f'https://t.me/c/{private_channel_internal_id}/1')})"
+      private_channel_reference = get_channel_reference(
+        private_channel.id, private_channel.title
+      )
 
       await context.bot.ban_chat_member(private_channel_id, user.id)
       await context.bot.unban_chat_member(private_channel_id, user.id)
