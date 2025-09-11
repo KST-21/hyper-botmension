@@ -66,8 +66,12 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
       chat_id=BOT_RECEPTION_CHANNEL_ID,
-      text=
-      f"{user_reference} ဆိုတဲ့ကောင် {requested_channel_reference} channel ထဲကို {public_channel_reference} channel subscribe မလုပ်ဘဲ ဝင်လာလို့ reject လိုက်ပြီ",
+      text=(
+        f"🚨 **REJECT** 🚨\n\n"
+        f"{user_reference} ဆိုတဲ့ကောင် {requested_channel_reference} channel ထဲကို\n"
+        f"{public_channel_reference} channel subscribe မလုပ်ဘဲ ဝင်လာလို့\n"
+        f"reject လိုက်ပြီ"
+      ),
       parse_mode="MarkdownV2"
     )
 
@@ -131,8 +135,12 @@ async def handle_user_membership(
 
       await context.bot.send_message(
         chat_id=BOT_RECEPTION_CHANNEL_ID,
-        text=
-        f"{user_reference} ဆိုတဲ့ကောင် {public_channel_reference} channel ကို subscribe လာဖြုတ်လို့ {private_channel_reference} channel ကနေ Kick လိုက်ပြီ",
+        text=(
+          f"🚨 **KICK** 🚨\n\n"
+          f"{user_reference} ဆိုတဲ့ကောင် {public_channel_reference} channel ကို\n"
+          f"subscribe လာဖြုတ်လို့ {private_channel_reference} channel ကနေ\n"
+          f"Kick လိုက်ပြီ"
+        ),
         parse_mode="MarkdownV2"
       )
 
