@@ -56,7 +56,9 @@ def get_private_channel_ids(data_type: Callable[[Iterable[int]], T]) -> T:
 
 
 def get_user_reference(user: User):
-  return f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')})"
+  if user.username:
+    return f"[{escape_md(user.full_name)}](https://t.me/{escape_md(user.username)})"
+  return f"[{escape_md(user.full_name)}]({escape_md(f'tg://user?id={user.id}')}) {escape_md('(')}[Backup Web Link]({escape_md(f'https://web.telegram.org/a/#{user.id}')}){escape_md(')')}"
 
 
 def get_channel_reference(channel_id: int, channel_title: str | None):

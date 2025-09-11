@@ -50,9 +50,12 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
       chat_id=BOT_RECEPTION_CHANNEL_ID,
-      text=
-      f"{user_reference} ဆိုတဲ့ကောင် {requested_channel_reference} channel ထဲကို ဝင်လာပြီ\n{public_channel_reference} channel ကို subscribe လုပ်ထား",
-      parse_mode="MarkdownV2"
+      text=(
+        f"{user_reference} ဆိုတဲ့ကောင် {requested_channel_reference} channel ထဲကို ဝင်လာပြီ\n"
+        f"{public_channel_reference} channel ကို subscribe လုပ်ထား"
+      ),
+      parse_mode="MarkdownV2",
+      disable_web_page_preview=True
     )
 
   else:
@@ -72,7 +75,8 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{public_channel_reference} channel subscribe မလုပ်ဘဲ ဝင်လာလို့\n"
         f"reject လိုက်ပြီ"
       ),
-      parse_mode="MarkdownV2"
+      parse_mode="MarkdownV2",
+      disable_web_page_preview=True
     )
 
 
@@ -111,7 +115,8 @@ async def handle_user_membership(
     await context.bot.send_message(
       chat_id=JOIN_LEAVE_NOTIFICATION_CHANNEL_ID,
       text=f"{user_reference} left {public_channel_reference}",
-      parse_mode="MarkdownV2"
+      parse_mode="MarkdownV2",
+      disable_web_page_preview=True
     )
 
     private_channel_ids = get_private_channel_ids(tuple)
@@ -141,7 +146,8 @@ async def handle_user_membership(
           f"subscribe လာဖြုတ်လို့ {private_channel_reference} channel ကနေ\n"
           f"Kick လိုက်ပြီ"
         ),
-        parse_mode="MarkdownV2"
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True
       )
 
   elif old_status in (
@@ -150,5 +156,6 @@ async def handle_user_membership(
     await context.bot.send_message(
       chat_id=JOIN_LEAVE_NOTIFICATION_CHANNEL_ID,
       text=f"{user_reference} joined {public_channel_reference}",
-      parse_mode="MarkdownV2"
+      parse_mode="MarkdownV2",
+      disable_web_page_preview=True
     )
