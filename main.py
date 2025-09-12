@@ -48,7 +48,7 @@ def main():
     app.add_handler(h)
 
   logger.info("Polling...")
-  app.run_polling(allowed_updates=Update.ALL_TYPES)
+  app.run_polling(allowed_updates=Update.ALL_TYPES, timeout=60)
 
 
 if __name__ == "__main__":
