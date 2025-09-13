@@ -1,9 +1,12 @@
 import re
-from telegram import Chat, ChatFullInfo, InlineKeyboardButton, Message, Update, User
+import logging
+from telegram import Bot, Chat, ChatFullInfo, InlineKeyboardButton, Message, Update, User
 from telegram.ext import ContextTypes
+from telegram.error import Forbidden, NetworkError, TimedOut
 from constants import *
-from config import BOT_RECEPTION_CHANNEL_ID
-from typing import Callable, Iterable, TypeVar
+from config import BOT_ERROR_LOGGING_CHANNEL_ID, BOT_RECEPTION_CHANNEL_ID
+from typing import Any, Awaitable, Callable, Iterable, TypeVar
+import asyncio
 
 T = TypeVar("T")
 
@@ -64,3 +67,47 @@ def get_user_reference(user: User):
 def get_channel_reference(channel_id: int, channel_title: str | None):
   internal_id = get_channel_internal_id(channel_id)
   return f"[{escape_md(channel_title or '')}]({escape_md(f'https://t.me/c/{internal_id}/1')})"
+
+
+async def safe_send_message(
+  send_message: Callable[[], Awaitable[Any]],
+  bot: Bot,
+  original_message: str,
+  user_reference: str | None = None,
+  retries: int = 3
+):
+  if not BOT_ERROR_LOGGING_CHANNEL_ID:
+    return
+
+  logger = logging.getLogger(__name__)
+
+  for _ in range(0, retries):
+    try:
+      await send_message()
+      return
+
+    except Forbidden:
+      message_to_send = (
+        f"🚨 **BLOCKED** 🚨\n\n"
+        f"{user_reference} ဆိုတဲ့ကောင် bot ကို block ထားလို့ ပို့မရ\n"
+        f"Original Message:\n"
+        f"{original_message}"
+      )
+      await safe_send_message(
+        lambda: bot.send_message(
+          str(BOT_ERROR_LOGGING_CHANNEL_ID),
+          message_to_send,
+          parse_mode="MarkdownV2",
+          disable_web_page_preview=True
+        ),
+        bot,
+        original_message=message_to_send
+      )
+      return
+
+    except (TimedOut, NetworkError) as e:
+      logger.exception(
+        "Error when sending this message.\n"
+        f"{original_message}"
+      )
+      await asyncio.sleep(2)

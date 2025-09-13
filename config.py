@@ -14,6 +14,7 @@ BETA_BOT_USERNAME: Final = os.getenv("BETA_BOT_USERNAME")
 JOIN_LEAVE_NOTIFICATION_CHANNEL_ID: Final = os.getenv(
   "JOIN_LEAVE_NOTIFICATION_CHANNEL_ID"
 )
+BOT_ERROR_LOGGING_CHANNEL_ID: Final = os.getenv("BOT_ERROR_LOGGING_CHANNEL_ID")
 
 # runtime state (could move to Redis/DB later)
 data: Data = {
