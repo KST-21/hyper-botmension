@@ -2,7 +2,7 @@ from telegram import ChatMember, Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
-from config import BOT_RECEPTION_CHANNEL_ID, JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
+from config import JOIN_LEAVE_NOTIFICATION_CHANNEL_ID, PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
 from helpers.utils import escape_md, get_channel_internal_id, get_channel_reference, get_private_channel_ids, get_public_channel_id, get_user_reference, safe_send_message
 
 
@@ -19,7 +19,9 @@ async def check_subscription(
 
 
 async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  if not (update.chat_join_request and BOT_RECEPTION_CHANNEL_ID):
+  if not (
+    update.chat_join_request and PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
+  ):
     return
 
   user = update.chat_join_request.from_user
@@ -58,7 +60,7 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await safe_send_message(
       lambda: context.bot.send_message(
-        chat_id=str(BOT_RECEPTION_CHANNEL_ID),
+        chat_id=str(PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID),
         text=message_to_send,
         parse_mode="MarkdownV2",
         disable_web_page_preview=True
@@ -87,7 +89,7 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await safe_send_message(
       lambda: context.bot.send_message(
-        chat_id=str(BOT_RECEPTION_CHANNEL_ID),
+        chat_id=str(PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID),
         text=message_to_send,
         parse_mode="MarkdownV2",
         disable_web_page_preview=True
@@ -102,7 +104,8 @@ async def handle_user_membership(
 ):
   result = update.chat_member
   if not (
-    result and BOT_RECEPTION_CHANNEL_ID and JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
+    result and JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
+    and PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
   ):
     return
 
@@ -175,7 +178,7 @@ async def handle_user_membership(
       )
       await safe_send_message(
         lambda: context.bot.send_message(
-          chat_id=str(BOT_RECEPTION_CHANNEL_ID),
+          chat_id=str(PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID),
           text=message_to_send,
           parse_mode="MarkdownV2",
           disable_web_page_preview=True
