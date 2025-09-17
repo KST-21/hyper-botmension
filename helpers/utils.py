@@ -4,7 +4,7 @@ from telegram import Bot, InlineKeyboardButton, Update, User
 from telegram.ext import ContextTypes
 from telegram.error import Forbidden, NetworkError, TimedOut
 from constants import *
-from config import BOT_ERROR_LOGGING_CHANNEL_ID, BOT_RECEPTION_CHANNEL_ID
+from config import BOT_ERROR_LOGGING_CHANNEL_ID
 from typing import Any, Awaitable, Callable, Iterable, TypeVar
 import asyncio
 

@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
 from config import JOIN_LEAVE_NOTIFICATION_CHANNEL_ID, PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
-from helpers.utils import escape_md, get_channel_internal_id, get_channel_reference, get_private_channel_ids, get_public_channel_id, get_user_reference, safe_send_message
+from helpers.utils import get_channel_reference, get_private_channel_ids, get_public_channel_id, get_user_reference, safe_send_message
 
 
 async def check_subscription(

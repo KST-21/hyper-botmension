@@ -1,4 +1,4 @@
-from telegram import CallbackQuery, Message, Update
+from telegram import Message, Update
 from telegram.ext import ContextTypes
 from constants import *
 from config import BOT_RECEPTION_CHANNEL_ID, data
