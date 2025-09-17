@@ -2,17 +2,6 @@ from helpers.types import BOT_INFO_TYPE, Channels
 
 BOT_INFO: BOT_INFO_TYPE = {"name": None, "username": None, "is_beta": None}
 
-
-def get_welcome_message() -> str:
-  name = BOT_INFO["name"] or "Bot"
-  # commented out the feature that won't support yet
-  return (
-    f"ဟယ်လိုပါ {name} ကနေ ကြိုဆိုပါတယ်ဗျ\n\n"
-    "New features coming soon..."
-    # "ဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"
-  )
-
-
 not_private_chat_warning_message = "You cannot use me in the group chat\nGroup chat တွင် အသုံးပြုခြင်း သည်းခံပါ"
 premium_prompt_message = "Premium ရက် ၃၀ ဝင်မယ်"
 buy_something_prompt_message = "ဇာတ်ကား ဝယ်မယ်"
@@ -27,13 +16,15 @@ channels: Channels = {
   "fake_public_channel_id": -1002764951583,
   "fake_private_channels": {
     "testing_private_channel_for_beta": {
-      "id": -1002906977198
+      "id": -1002906977198,
+      "invite_link": "https://t.me/+3ZP9JUrat30xN2M1"
     }
   },
   "hyper_space": -1002315991423,
   "private_channels": {
     "hyper_space_domain": {
       "id": -1002968318914,
+      "invite_link": "https://t.me/+PJDDFRsJyQAwYWFl",
     },
   },
   "premium_channels": {

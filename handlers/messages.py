@@ -2,7 +2,7 @@ from telegram import CallbackQuery, Message, Update
 from telegram.ext import ContextTypes
 from constants import *
 from config import BOT_RECEPTION_CHANNEL_ID, data
-from helpers.utils import is_private_chat
+from helpers.utils import create_private_invite_link_with_message, is_private_chat
 
 
 async def forward_message(
@@ -26,6 +26,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update_message.reply_text(not_private_chat_warning_message)
     return
 
+  private_invite_link_message = await create_private_invite_link_with_message(
+    context
+  )
+  await update_message.reply_text(
+    private_invite_link_message, parse_mode="MarkdownV2"
+  )
   await update_message.reply_text(sending_message_warning_1)
   await update_message.reply_text(sending_message_warning_2)
 

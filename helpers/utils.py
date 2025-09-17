@@ -1,6 +1,6 @@
 import re
 import logging
-from telegram import Bot, Chat, ChatFullInfo, InlineKeyboardButton, Message, Update, User
+from telegram import Bot, InlineKeyboardButton, Update, User
 from telegram.ext import ContextTypes
 from telegram.error import Forbidden, NetworkError, TimedOut
 from constants import *
@@ -9,6 +9,33 @@ from typing import Any, Awaitable, Callable, Iterable, TypeVar
 import asyncio
 
 T = TypeVar("T")
+
+
+def get_welcome_message() -> str:
+  name = BOT_INFO["name"] or "Bot"
+  # commented out the feature that won't support yet
+  return (
+    f"ဟယ်လိုပါ {name} ကနေ ကြိုဆိုပါတယ်ဗျ\n\n"
+    # "ဇာတ်ကားဝယ်မှာလား Premium ရက်၃၀ ဝင်မှာလားဆိုတာ ရွေးပေးပါခင်ဗျ"
+  )
+
+
+async def create_private_invite_link_with_message(
+  context: ContextTypes.DEFAULT_TYPE
+) -> str:
+  public_channel = await context.bot.get_chat(get_public_channel_id())
+  public_channel_reference = get_channel_reference(
+    public_channel.id, public_channel.title
+  )
+  private_channel_id = get_private_channel_ids(tuple)[0]
+  private_channel = await context.bot.get_chat(private_channel_id)
+
+  invite_link = get_private_channel_invite_links(tuple)[0]
+  return (
+    f"'{private_channel.title or "Private channel"}' ထဲကို ဝင်လိုလျှင်\n"
+    f"{public_channel_reference} ကို အရင် Subscribe ပြီးမှ\n"
+    f"ဒီ link {escape_md(invite_link)} ကို နှိပ်ပြီး ဝင်ခွင့်တောင်းပါ"
+  )
 
 
 def is_private_chat(update: Update):
@@ -42,19 +69,36 @@ def get_channel_internal_id(id: int) -> str:
   return str(id).replace("-100", "", 1)
 
 
+def is_beta():
+  return BOT_INFO["is_beta"]
+
+
 def get_public_channel_id() -> int:
-  if BOT_INFO["is_beta"]:
+  if is_beta():
     return channels["fake_public_channel_id"]
   return channels["hyper_space"]
 
 
 def get_private_channel_ids(data_type: Callable[[Iterable[int]], T]) -> T:
-  if BOT_INFO["is_beta"]:
+  if is_beta():
     return data_type(
       data["id"] for data in channels["fake_private_channels"].values()
     )
   return data_type(
     data["id"] for data in channels["private_channels"].values()
+  )
+
+
+def get_private_channel_invite_links(
+  data_type: Callable[[Iterable[str]], T]
+) -> T:
+  if is_beta():
+    return data_type(
+      data["invite_link"]
+      for data in channels["fake_private_channels"].values()
+    )
+  return data_type(
+    data["invite_link"] for data in channels["private_channels"].values()
   )
 
 

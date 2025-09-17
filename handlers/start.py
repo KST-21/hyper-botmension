@@ -1,8 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from constants import get_welcome_message, not_private_chat_warning_message, premium_prompt_message, buy_something_prompt_message
+from constants import not_private_chat_warning_message, premium_prompt_message, buy_something_prompt_message
 from config import data
-from helpers.utils import is_private_chat
+from helpers.utils import create_private_invite_link_with_message, get_welcome_message, get_welcome_message, is_private_chat
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -18,9 +18,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   welcome_message = get_welcome_message()
+  private_invite_link_message = await create_private_invite_link_with_message(
+    context
+  )
   # commented out the feature that won't support yet
   # await update.message.reply_text(welcome_message, reply_markup=reply_markup)
   await update.message.reply_text(welcome_message)
+  await update.message.reply_text(
+    private_invite_link_message, parse_mode="MarkdownV2"
+  )
 
   user = update.message.from_user
   if user and user.id in data["allow_photo_message"]:

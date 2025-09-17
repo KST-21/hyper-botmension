@@ -8,6 +8,7 @@ class Data(TypedDict):
 
 class PrivateChannel(TypedDict):
   id: int
+  invite_link: str
 
 
 class PremiumChannel(TypedDict):
