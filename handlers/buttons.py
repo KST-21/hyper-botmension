@@ -1,9 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from handlers.offers.buy import handle_buy
-from handlers.offers.how_to_subscribe import handle_how_to_subscribe
-from handlers.offers.invite_private import handle_invite_private
-from handlers.offers.premium import handle_premium
+from handlers.button_commands.buy import handle_buy
+from handlers.button_commands.how_to_subscribe import handle_how_to_subscribe
+from handlers.button_commands.invite_private import handle_invite_private
+from handlers.button_commands.premium import handle_premium
 from handlers.receipt import handle_approve_join, handle_reject_join, handle_custom_reject, handle_cancel_custom_reject
 
 
