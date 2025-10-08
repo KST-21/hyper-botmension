@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from constants import not_private_chat_warning_message, premium_prompt_message, buy_something_prompt_message
+from constants import not_private_chat_warning_message, request_private_join, premium_prompt_message, buy_something_prompt_message
 from config import data
 from helpers.utils import create_private_invite_link_with_message, get_welcome_message, get_welcome_message, is_private_chat
 
@@ -13,20 +13,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
 
   keyboard = [
-    [InlineKeyboardButton(premium_prompt_message, callback_data="premium")],
-    [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")],
+    # [InlineKeyboardButton(premium_prompt_message, callback_data="premium")],
+    # [InlineKeyboardButton(buy_something_prompt_message, callback_data="buy")],
+    [
+      InlineKeyboardButton(
+        request_private_join, callback_data="invite_private"
+      )
+    ],
   ]
   reply_markup = InlineKeyboardMarkup(keyboard)
   welcome_message = get_welcome_message()
-  private_invite_link_message = await create_private_invite_link_with_message(
-    context
-  )
-  # commented out the feature that won't support yet
-  # await update.message.reply_text(welcome_message, reply_markup=reply_markup)
-  await update.message.reply_text(welcome_message)
-  await update.message.reply_text(
-    private_invite_link_message, parse_mode="MarkdownV2"
-  )
+
+  await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
   user = update.message.from_user
   if user and user.id in data["allow_photo_message"]:
