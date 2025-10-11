@@ -2,7 +2,7 @@ from telegram import Message, Update
 from telegram.ext import ContextTypes
 from constants import *
 from config import BOT_RECEPTION_CHANNEL_ID
-from helpers.utils import is_private_chat
+from helpers.utils import get_user_reference, is_private_chat
 
 
 async def forward_message(
@@ -10,10 +10,25 @@ async def forward_message(
 ):
   if not BOT_RECEPTION_CHANNEL_ID:
     return
-  await context.bot.forward_message(
+
+  forwarded_message = await context.bot.forward_message(
     chat_id=BOT_RECEPTION_CHANNEL_ID,
     from_chat_id=update_message.chat_id,
     message_id=update_message.message_id
+  )
+
+  user = update_message.from_user
+  if not user:
+    return
+
+  user_reference = get_user_reference(user)
+
+  await context.bot.send_message(
+    chat_id=BOT_RECEPTION_CHANNEL_ID,
+    text=user_reference,
+    reply_to_message_id=forwarded_message.id,
+    parse_mode="MarkdownV2",
+    disable_web_page_preview=True
   )
 
 
