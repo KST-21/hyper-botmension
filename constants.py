@@ -1,6 +1,12 @@
+from telegram import ChatFullInfo
 from helpers.types import BOT_INFO_TYPE, Channels
 
-BOT_INFO: BOT_INFO_TYPE = {"name": None, "username": None, "is_beta": None}
+BOT_INFO: BOT_INFO_TYPE = {
+  "name": None,
+  "username": None,
+  "is_beta": None,
+  "public_channel": None
+}
 
 not_private_chat_warning_message = "You cannot use me in the group chat\nGroup chat တွင် အသုံးပြုခြင်း သည်းခံပါ"
 premium_prompt_message = "Premium ရက် ၃၀ ဝင်မယ်"

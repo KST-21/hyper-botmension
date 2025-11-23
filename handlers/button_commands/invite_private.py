@@ -18,6 +18,9 @@ async def handle_invite_private(
   private_invite_link_message = await create_private_invite_link_with_message(
     context
   )
+  if not private_invite_link_message:
+    return
+
   await query.edit_message_text(
     text=private_invite_link_message,
     parse_mode="MarkdownV2",

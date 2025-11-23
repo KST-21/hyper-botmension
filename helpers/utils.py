@@ -22,8 +22,10 @@ def get_welcome_message() -> str:
 
 async def create_private_invite_link_with_message(
   context: ContextTypes.DEFAULT_TYPE
-) -> str:
-  public_channel = await context.bot.get_chat(get_public_channel_id())
+) -> str | None:
+  public_channel = BOT_INFO["public_channel"]
+  if not public_channel:
+    return
   public_channel_reference = get_channel_reference(
     public_channel.id, public_channel.title
   )

@@ -3,6 +3,7 @@ from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
 from config import JOIN_LEAVE_NOTIFICATION_CHANNEL_ID, PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
+from constants import BOT_INFO
 from helpers.utils import get_channel_reference, get_private_channel_ids, get_public_channel_id, get_user_reference, safe_send_message
 
 
@@ -19,8 +20,10 @@ async def check_subscription(
 
 
 async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+  public_channel = BOT_INFO["public_channel"]
   if not (
     update.chat_join_request and PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
+    and public_channel
   ):
     return
 
@@ -37,7 +40,6 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     requested_channel.id, requested_channel.title
   )
 
-  public_channel = await context.bot.get_chat(get_public_channel_id())
   public_channel_reference = get_channel_reference(
     public_channel.id, public_channel.title
   )
@@ -103,9 +105,11 @@ async def handle_user_membership(
   update: Update, context: ContextTypes.DEFAULT_TYPE
 ):
   result = update.chat_member
+  public_channel = BOT_INFO["public_channel"]
+
   if not (
     result and JOIN_LEAVE_NOTIFICATION_CHANNEL_ID
-    and PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID
+    and PRIVATE_APPROVAL_NOTIFICATION_CHANNEL_ID and public_channel
   ):
     return
 
@@ -120,7 +124,6 @@ async def handle_user_membership(
   if chat.id != public_channel_id:
     return
 
-  public_channel = await context.bot.get_chat(get_public_channel_id())
   public_channel_reference = get_channel_reference(
     public_channel.id, public_channel.title
   )

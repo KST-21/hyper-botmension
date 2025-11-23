@@ -1,5 +1,7 @@
 from typing import TypedDict
 
+from telegram import ChatFullInfo
+
 
 class Data(TypedDict):
   allow_photo_message: set[int]
@@ -35,3 +37,4 @@ class BOT_INFO_TYPE(TypedDict):
   name: str | None
   username: str | None
   is_beta: bool | None
+  public_channel: ChatFullInfo | None

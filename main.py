@@ -10,6 +10,7 @@ from handlers.start import start
 from handlers.buttons import button
 from handlers.photos import photo_handler
 from handlers.receipt import handle_custom_reject_message
+from helpers.utils import get_public_channel_id
 
 
 async def init_bot_info(app: Application):
@@ -19,6 +20,9 @@ async def init_bot_info(app: Application):
     BOT_INFO["username"] = me.username
     BOT_INFO["is_beta"] = (
       not BETA_BOT_USERNAME or me.username == BETA_BOT_USERNAME
+    )
+    BOT_INFO["public_channel"] = await app.bot.get_chat(
+      get_public_channel_id()
     )
 
 
